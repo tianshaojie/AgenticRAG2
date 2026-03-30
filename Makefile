@@ -1,5 +1,6 @@
 .PHONY: help install dev-backend dev-frontend db-setup db-migrate db-migrate-create \
-        test-backend test-frontend test lint fmt clean
+        test-backend test-frontend test lint fmt clean \
+        docker-up docker-down docker-dev-up docker-dev-down docker-logs docker-build docker-ps
 
 # ── Variables ─────────────────────────────────────────────────────────
 PYTHON      := python3.12
@@ -24,6 +25,15 @@ help:
 	@echo "  make test              Run all tests"
 	@echo "  make lint              Run ruff linter"
 	@echo "  make fmt               Run ruff formatter"
+	@echo ""
+	@echo "Docker commands:"
+	@echo "  make docker-up         Build + start all services (DB+backend+frontend)"
+	@echo "  make docker-down       Stop and remove containers"
+	@echo "  make docker-dev-up     Dev mode: DB + backend only (hot-reload)"
+	@echo "  make docker-dev-down   Stop dev containers"
+	@echo "  make docker-logs       Tail logs for all services"
+	@echo "  make docker-build      Rebuild images without cache"
+	@echo "  make docker-ps         Show running containers"
 
 # ── Install ───────────────────────────────────────────────────────────
 install: install-backend install-frontend
@@ -77,3 +87,29 @@ clean:
 	find backend -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 	find backend -name "*.pyc" -delete 2>/dev/null || true
 	rm -rf frontend/node_modules frontend/dist 2>/dev/null || true
+
+# ── Docker: full stack ────────────────────────────────────────────────
+docker-up:
+	docker compose up --build -d
+
+docker-down:
+	docker compose down
+
+docker-logs:
+	docker compose logs -f
+
+docker-build:
+	docker compose build --no-cache
+
+docker-ps:
+	docker compose ps
+
+# ── Docker: dev mode (DB + backend only, hot-reload) ──────────────────
+docker-dev-up:
+	docker compose -f docker-compose.dev.yml up --build -d
+
+docker-dev-down:
+	docker compose -f docker-compose.dev.yml down
+
+docker-dev-logs:
+	docker compose -f docker-compose.dev.yml logs -f

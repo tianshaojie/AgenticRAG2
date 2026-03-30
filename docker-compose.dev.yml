@@ -1,0 +1,73 @@
+# 开发模式：只启动 DB + Backend，前端用本地 npm run dev
+# 启动命令：docker compose -f docker-compose.dev.yml up
+
+services:
+
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: rag_db_dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: agentic_rag
+    volumes:
+      - pg_data_dev:/var/lib/postgresql/data
+      - ./docker/init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d agentic_rag"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  migrate:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: rag_migrate_dev
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/agentic_rag
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: rag_backend_dev
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/agentic_rag
+      ENVIRONMENT: development
+      DEBUG: "true"
+      LOG_FORMAT: console
+      LOG_LEVEL: DEBUG
+      EMBEDDING_PROVIDER: deterministic_stub
+      ANSWER_PROVIDER: echo_stub
+      RETRIEVAL_SCORE_THRESHOLD: "0.0"
+      MIN_EVIDENCE_CHUNKS: "1"
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/api/v1/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    # 热重载：挂载源码（仅开发时用）
+    volumes:
+      - ./backend:/app
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+volumes:
+  pg_data_dev:
+    name: agentic_rag_pg_data_dev
