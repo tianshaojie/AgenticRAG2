@@ -42,14 +42,35 @@ class Settings(BaseSettings):
     # --- Agent ---
     max_agent_steps: int = 5
 
-    # --- Embedding (placeholder, Step 2 fills in) ---
+    # --- Chunking ---
+    chunk_size_tokens: int = 512
+    chunk_overlap_tokens: int = 64
+    chunk_min_tokens: int = 20
+
+    # --- Embedding ---
+    # "deterministic_stub" = local hash-based stub (no external calls, default for dev)
+    # "openai" = OpenAI Embeddings API (requires llm_api_key)
+    embedding_provider: str = "deterministic_stub"
     embedding_model: str = "text-embedding-3-small"
     embedding_timeout_seconds: int = 30
+    embedding_max_retries: int = 3
 
-    # --- LLM (placeholder, Step 4 fills in) ---
+    # --- Answer generation ---
+    # "echo_stub" = returns context as answer (no LLM, default for dev)
+    # "openai" = OpenAI Chat Completions (requires llm_api_key, Step 4)
+    answer_provider: str = "echo_stub"
+    # Minimum number of retrieved chunks required before generating an answer.
+    # If fewer chunks pass the score threshold, the agent abstains.
+    min_evidence_chunks: int = 1
+
+    # --- LLM (Step 4 fills in full implementation) ---
     llm_model: str = "gpt-4o-mini"
     llm_timeout_seconds: int = 60
     llm_api_key: str = ""
+
+    # --- Ingestion ---
+    max_upload_size_bytes: int = 50 * 1024 * 1024  # 50 MB
+    allowed_content_types: list[str] = ["text/plain", "text/markdown", "text/x-markdown"]
 
     # --- Observability ---
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"

@@ -4,7 +4,7 @@ asyncio_mode = "auto"
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-addopts = "-v --cov=app --cov-report=term-missing --cov-report=xml"
+addopts = "-v"
 
 [tool.coverage.run]
 source = ["app"]
