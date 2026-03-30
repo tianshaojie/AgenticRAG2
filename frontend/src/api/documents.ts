@@ -1,8 +1,3 @@
-/**
- * Document API — wraps /api/v1/documents endpoints.
- * Step 1: Stubs only. Full implementation in Step 2.
- */
-
 import { httpClient, unwrap } from './client'
 import type {
   APIResponse,
@@ -12,23 +7,21 @@ import type {
 } from '@/types/api'
 
 export const documentsApi = {
-  list(page = 1, pageSize = 20) {
-    return httpClient.get<PaginatedResponse<DocumentResponse>>('/documents', {
+  async list(page = 1, pageSize = 20): Promise<PaginatedResponse<DocumentResponse>> {
+    const response = await httpClient.get<PaginatedResponse<DocumentResponse>>('/documents', {
       params: { page, page_size: pageSize },
     })
+    return response.data
   },
 
   get(id: string) {
-    return unwrap(
-      httpClient.get<APIResponse<DocumentResponse>>(`/documents/${id}`),
-    )
+    return unwrap(httpClient.get<APIResponse<DocumentResponse>>(`/documents/${id}`))
   },
 
-  upload(file: File, title?: string, meta?: Record<string, unknown>) {
+  upload(file: File, title?: string) {
     const form = new FormData()
     form.append('file', file)
     if (title) form.append('title', title)
-    if (meta) form.append('meta', JSON.stringify(meta))
     return unwrap(
       httpClient.post<APIResponse<DocumentResponse>>('/documents', form, {
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -38,14 +31,13 @@ export const documentsApi = {
 
   index(id: string, forceReindex = false) {
     return unwrap(
-      httpClient.post<APIResponse<DocumentIndexResponse>>(
-        `/documents/${id}/index`,
-        { force_reindex: forceReindex },
-      ),
+      httpClient.post<APIResponse<DocumentIndexResponse>>(`/documents/${id}/index`, {
+        force_reindex: forceReindex,
+      }),
     )
   },
 
-  delete(id: string) {
+  remove(id: string) {
     return httpClient.delete(`/documents/${id}`)
   },
 }
