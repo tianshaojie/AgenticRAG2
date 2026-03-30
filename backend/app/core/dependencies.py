@@ -6,12 +6,15 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import Settings, get_settings
-from app.db.session import async_session_factory
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """Yield a database session per request."""
-    async with async_session_factory() as session:
+    import app.db.session as _session_module  # late import to get updated global
+    factory = _session_module.async_session_factory
+    if factory is None:
+        raise RuntimeError("Database not initialized. Ensure lifespan startup ran.")
+    async with factory() as session:
         try:
             yield session
             await session.commit()

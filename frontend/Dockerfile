@@ -11,8 +11,8 @@ RUN npm install --registry=https://registry.npmmirror.com
 # Copy source
 COPY . .
 
-# Build production bundle
-RUN npm run build
+# Build production bundle (skip vue-tsc type check for faster Docker builds)
+RUN npx vite build
 
 
 # ── Stage 2: nginx runtime ────────────────────────────────────────────

@@ -19,5 +19,5 @@ import { useRoute } from 'vue-router'
 
 const route = useRoute()
 // TODO(Step 4): fetch trace by route.params.traceId via chatApi.getTrace()
-const _traceId = route.params.traceId
+void route.params.traceId
 </script>

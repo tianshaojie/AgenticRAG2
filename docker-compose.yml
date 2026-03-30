@@ -13,7 +13,7 @@ services:
       - pg_data:/var/lib/postgresql/data
       - ./docker/init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
     ports:
-      - "5432:5432"
+      - "5433:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d agentic_rag"]
       interval: 5s
@@ -59,7 +59,7 @@ services:
       - ./backend/.env
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/agentic_rag
-    command: ["alembic", "upgrade", "head"]
+    command: ["alembic", "-c", "alembic/alembic.ini", "upgrade", "head"]
     depends_on:
       db:
         condition: service_healthy
